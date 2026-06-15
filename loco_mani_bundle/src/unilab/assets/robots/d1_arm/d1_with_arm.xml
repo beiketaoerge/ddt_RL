@@ -1,0 +1,427 @@
+<mujoco model="d1">
+  <compiler angle="radian" autolimits="true"/>
+
+  <option iterations="1" ls_iterations="5" timestep="0.004" integrator="Euler">
+    <flag eulerdamp="disable"/>
+  </option>
+
+  <custom>
+    <numeric data="30" name="max_contact_points"/>
+    <numeric data="12" name="max_geom_pairs"/>
+  </custom>
+
+  <default>
+    <default class="obj_collision">
+      <geom group="3" contype="1" conaffinity="1"/>
+    </default>
+
+    <default class="airbot_play">
+      <joint axis="0 0 1" armature="0.01" damping="1" frictionloss="5"/>
+      <position inheritrange="1" kp="35" forcerange="-18 18"/>
+      <default class="joint1">
+        <joint range="-3.1416 2.0944" actuatorfrcrange="-24 24" damping="0.2" frictionloss="1"/>
+      </default>
+      <default class="joint2">
+        <joint range="-2.9671 0.17453" actuatorfrcrange="-24 24" damping="0.2" frictionloss="1"/>
+      </default>
+      <default class="joint3">
+        <joint range="-0.087266 3.1416" actuatorfrcrange="-24 24" damping="0.2" frictionloss="1"/>
+      </default>
+      <default class="joint4">
+        <joint range="-3.0107 3.0107" actuatorfrcrange="-8 8" damping="0.1" frictionloss="0.5"/>
+        <position forcerange="-8 8"/>
+      </default>
+      <default class="joint5">
+        <joint range="-1.7628 1.7628" actuatorfrcrange="-8 8" damping="0.1" frictionloss="0.5"/>
+        <position forcerange="-8 8"/>
+      </default>
+      <default class="joint6">
+        <joint range="-3.0107 3.0107" actuatorfrcrange="-8 8" damping="0.1" frictionloss="0.5"/>
+        <position forcerange="-8 8"/>
+      </default>
+    </default>
+
+    <default class="d1">
+      <geom friction="0.6" margin="0.001" condim="1"/>
+      <joint damping="0.5" armature="0.01" frictionloss="0.2"/>
+    </default>
+    <default class="d1_hip">
+      <joint axis="0 0 1" range="-0.785398 0.785398"/>
+    </default>
+    <default class="d1_thigh">
+      <joint axis="0 0 1" range="-1.8326 3.40339"/>
+    </default>
+    <default class="d1_calf">
+      <joint axis="0 0 1" range="-2.775 -0.855"/>
+    </default>
+    <default class="d1_wheel">
+      <joint axis="0 0 1" range="-1000000 1000000"/>
+    </default>
+  </default>
+
+  <worldbody>
+    <body name="base" pos="0 0 0.60" childclass="d1">
+      <camera name="track" pos="1.0 -1.8 1.1" xyaxes="0.866 0.500 0.000 -0.171 0.296 0.940" mode="trackcom"/>
+      <inertial pos="0.0 0.0 -0.02" mass="22.65" diaginertia="0.18 0.95 0.95"/>
+      <freejoint/>
+
+      <!-- Base collision geoms -->
+      <geom name="base_front" type="box" size="0.1375 0.075 0.0875" pos="0.1875 0 0" class="obj_collision"/>
+      <geom name="base_front_lower" type="box" size="0.155 0.06 0.03" pos="0.1875 0 -0.12" class="obj_collision"/>
+      <geom name="base_rear" type="box" size="0.1375 0.075 0.0875" pos="-0.1875 0 0" class="obj_collision"/>
+      <geom name="base_rear_lower" type="box" size="0.155 0.06 0.03" pos="-0.1875 0 -0.12" class="obj_collision"/>
+
+      <site name="base_site"/>
+      <site name="imu" pos="0 0 0.04"/>
+
+      <!-- ======= FL LEG ======= -->
+      <body name="FL_hip" pos="0.282 0.0775 0" quat="0.499998 0.5 0.500002 0.5">
+        <inertial pos="-0.0181435 -7.96e-06 -0.0936513" mass="1.69464"
+          diaginertia="0.00379302 0.0027607 0.00214447"
+          quat="0.999969 0.002505 0.00743808 -9.41679e-05"/>
+        <joint name="FL_hip_joint" class="d1_hip"/>
+        <geom name="fl_hip_geom" type="box" size="0.04 0.04 0.04" pos="-0.018 0 -0.094" class="obj_collision"/>
+        <body name="FL_thigh" pos="0.0905 0 -0.0945" quat="0.500098 -0.5001 0.499902 -0.4999">
+          <inertial pos="0.0289509 0.00356333 -0.0281156" mass="2.55232"
+            diaginertia="0.0182972 0.0174693 0.00380065"
+            quat="-0.0769104 0.652025 5.23527e-05 0.754286"/>
+          <joint name="FL_thigh_joint" class="d1_thigh"/>
+          <geom name="fl_thigh_geom" type="box" size="0.13 0.045 0.025" pos="0.06 0.02 0"
+            quat="0.991445 0 0 0.130526" class="obj_collision"/>
+          <body name="FL_calf" pos="0.25 0 0">
+            <inertial pos="0.125063 0.00606587 0.00312587" mass="0.46345"
+              diaginertia="0.00494513 0.00490922 0.000208685"
+              quat="-0.0425827 0.690156 -0.0920102 0.716523"/>
+            <joint name="FL_calf_joint" class="d1_calf"/>
+            <geom name="fl_calf_geom" type="box" size="0.12 0.02 0.025" pos="0.15 0.01 0"
+              quat="0.9992 0 0 -0.0399893" class="obj_collision"/>
+            <body name="FL_foot" pos="0.25 0 0.052166">
+              <inertial pos="-2.82e-06 0 -0.00091845" mass="1.6631"
+                diaginertia="0.00760863 0.00398501 0.00393673"
+                quat="0.334356 0.623085 -0.334302 0.623067"/>
+              <joint name="FL_foot_joint" class="d1_wheel"/>
+              <geom name="FL_wheel_geom" type="cylinder" size="0.087 0.02"
+                friction="0.8 0.02 0.01" condim="6" priority="1"
+                solimp="0.015 1 0.022" contype="1" conaffinity="1"/>
+              <site name="FL" pos="0 0 0" type="sphere" size="0.023" group="5"/>
+            </body>
+          </body>
+        </body>
+      </body>
+
+      <!-- ======= FR LEG ======= -->
+      <body name="FR_hip" pos="0.282 -0.0775 0" quat="0.499998 0.5 0.500002 0.5">
+        <inertial pos="0.0181435 -8e-06 -0.0936513" mass="1.69464"
+          diaginertia="0.00379302 0.0027607 0.00214447"
+          quat="0.999969 0.002505 -0.00743808 9.41679e-05"/>
+        <joint name="FR_hip_joint" class="d1_hip"/>
+        <geom name="fr_hip_geom" type="box" size="0.04 0.04 0.04" pos="0.018 0 -0.094" class="obj_collision"/>
+        <body name="FR_thigh" pos="-0.0905 0 -0.0945" quat="0.499898 -0.4999 0.500102 -0.5001">
+          <inertial pos="0.0291816 0.00370278 0.0281157" mass="2.55232"
+            diaginertia="0.0182666 0.0174178 0.0038092"
+            quat="0.00133055 0.754556 0.0787582 0.651491"/>
+          <joint name="FR_thigh_joint" class="d1_thigh"/>
+          <geom name="fr_thigh_geom" type="box" size="0.13 0.045 0.025" pos="0.06 0.02 0"
+            quat="0.991445 0 0 0.130526" class="obj_collision"/>
+          <body name="FR_calf" pos="0.25 0 0">
+            <inertial pos="0.125064 0.00606606 -0.0031258" mass="0.463455"
+              diaginertia="0.00494517 0.00490926 0.000208687"
+              quat="0.0919975 0.716523 0.0425713 0.690159"/>
+            <joint name="FR_calf_joint" class="d1_calf"/>
+            <geom name="fr_calf_geom" type="box" size="0.12 0.02 0.025" pos="0.15 0.01 0"
+              quat="0.9992 0 0 -0.0399893" class="obj_collision"/>
+            <body name="FR_foot" pos="0.25 0 -0.052166" quat="0.363988 0 0 0.931404">
+              <inertial pos="-2.78e-06 0 0.00091859" mass="1.6631"
+                diaginertia="0.00760867 0.00398497 0.0039368"
+                quat="0.333846 0.623312 -0.3339 0.62333"/>
+              <joint name="FR_foot_joint" class="d1_wheel"/>
+              <geom name="FR_wheel_geom" type="cylinder" size="0.087 0.02"
+                friction="0.8 0.02 0.01" condim="6" priority="1"
+                solimp="0.015 1 0.022" contype="1" conaffinity="1"/>
+              <site name="FR" pos="0 0 0" type="sphere" size="0.023" group="5"/>
+            </body>
+          </body>
+        </body>
+      </body>
+
+      <!-- ======= RL LEG ======= -->
+      <body name="RL_hip" pos="-0.093 0.0775 0" quat="0.499998 0.5 0.500002 0.5">
+        <inertial pos="-0.0181435 -7.96e-06 -0.0936513" mass="1.69464"
+          diaginertia="0.00379302 0.0027607 0.00214447"
+          quat="0.999969 0.002505 0.00743808 -9.41679e-05"/>
+        <joint name="RL_hip_joint" class="d1_hip"/>
+        <geom name="rl_hip_geom" type="box" size="0.04 0.04 0.04" pos="-0.018 0 -0.094" class="obj_collision"/>
+        <body name="RL_thigh" pos="0.0905 0 -0.0945" quat="0.500098 -0.5001 0.499902 -0.4999">
+          <inertial pos="0.0289509 0.00356333 -0.0281156" mass="2.55232"
+            diaginertia="0.0182972 0.0174693 0.00380065"
+            quat="-0.0769104 0.652025 5.23527e-05 0.754286"/>
+          <joint name="RL_thigh_joint" class="d1_thigh"/>
+          <geom name="rl_thigh_geom" type="box" size="0.13 0.045 0.025" pos="0.06 0.02 0"
+            quat="0.991445 0 0 0.130526" class="obj_collision"/>
+          <body name="RL_calf" pos="0.25 0 0">
+            <inertial pos="0.125063 0.00606587 0.00312587" mass="0.46345"
+              diaginertia="0.00494513 0.00490922 0.000208685"
+              quat="-0.0425827 0.690156 -0.0920102 0.716523"/>
+            <joint name="RL_calf_joint" class="d1_calf"/>
+            <geom name="rl_calf_geom" type="box" size="0.12 0.02 0.025" pos="0.15 0.01 0"
+              quat="0.9992 0 0 -0.0399893" class="obj_collision"/>
+            <body name="RL_foot" pos="0.25 0 0.052166">
+              <inertial pos="-2.82e-06 0 -0.00091845" mass="1.6631"
+                diaginertia="0.00760863 0.00398501 0.00393673"
+                quat="0.334356 0.623085 -0.334302 0.623067"/>
+              <joint name="RL_foot_joint" class="d1_wheel"/>
+              <geom name="RL_wheel_geom" type="cylinder" size="0.087 0.02"
+                friction="0.8 0.02 0.01" condim="6" priority="1"
+                solimp="0.015 1 0.022" contype="1" conaffinity="1"/>
+              <site name="RL" pos="0 0 0" type="sphere" size="0.023" group="5"/>
+            </body>
+          </body>
+        </body>
+      </body>
+
+      <!-- ======= RR LEG ======= -->
+      <body name="RR_hip" pos="-0.093 -0.0775 0" quat="0.499998 0.5 0.500002 0.5">
+        <inertial pos="0.0181435 -8e-06 -0.0936513" mass="1.69464"
+          diaginertia="0.00379302 0.0027607 0.00214447"
+          quat="0.999969 0.002505 -0.00743808 9.41679e-05"/>
+        <joint name="RR_hip_joint" class="d1_hip"/>
+        <geom name="rr_hip_geom" type="box" size="0.04 0.04 0.04" pos="0.018 0 -0.094" class="obj_collision"/>
+        <body name="RR_thigh" pos="-0.0905 0 -0.0945" quat="0.499898 -0.4999 0.500102 -0.5001">
+          <inertial pos="0.0291816 0.00370278 0.0281157" mass="2.55232"
+            diaginertia="0.0182666 0.0174178 0.0038092"
+            quat="0.00133055 0.754556 0.0787582 0.651491"/>
+          <joint name="RR_thigh_joint" class="d1_thigh"/>
+          <geom name="rr_thigh_geom" type="box" size="0.13 0.045 0.025" pos="0.06 0.02 0"
+            quat="0.991445 0 0 0.130526" class="obj_collision"/>
+          <body name="RR_calf" pos="0.25 0 0">
+            <inertial pos="0.125064 0.00606606 -0.0031258" mass="0.463455"
+              diaginertia="0.00494517 0.00490926 0.000208687"
+              quat="0.0919975 0.716523 0.0425713 0.690159"/>
+            <joint name="RR_calf_joint" class="d1_calf"/>
+            <geom name="rr_calf_geom" type="box" size="0.12 0.02 0.025" pos="0.15 0.01 0"
+              quat="0.9992 0 0 -0.0399893" class="obj_collision"/>
+            <body name="RR_foot" pos="0.25 0 -0.052166" quat="0.363988 0 0 0.931404">
+              <inertial pos="-2.78e-06 0 0.00091859" mass="1.6631"
+                diaginertia="0.00760867 0.00398497 0.0039368"
+                quat="0.333846 0.623312 -0.3339 0.62333"/>
+              <joint name="RR_foot_joint" class="d1_wheel"/>
+              <geom name="RR_wheel_geom" type="cylinder" size="0.087 0.02"
+                friction="0.8 0.02 0.01" condim="6" priority="1"
+                solimp="0.015 1 0.022" contype="1" conaffinity="1"/>
+              <site name="RR" pos="0 0 0" type="sphere" size="0.023" group="5"/>
+            </body>
+          </body>
+        </body>
+      </body>
+
+      <!-- ======= AIRBOT PLAY ARM ======= -->
+      <body name="arm_base_on_d1" pos="0.0 0 0.0945">
+        <site name="armbasepoint" pos="0 0 0.1172"/>
+        <body name="arm_base" childclass="airbot_play">
+          <inertial pos="0 0 0.03" mass="1.5" diaginertia="0.002 0.002 0.001"/>
+          <geom name="arm_base_collision" type="cylinder" pos="0 0 0.06" euler="0 0 0" size="0.04 0.06" class="obj_collision"/>
+          <site name="touch_site_base" pos="0 0 0.05" size="0.001" type="sphere" group="3"/>
+          <body name="link1" pos="0 0 0.1172">
+            <inertial pos="0 0 0" mass="0.5" diaginertia="5e-4 5e-4 2e-4"/>
+            <joint name="joint1" class="joint1"/>
+            <geom name="link1_collision" type="cylinder" pos="0 0 0" euler="0 0 0" size="0.035 0.04" class="obj_collision"/>
+            <site name="touch_site_link1" pos="0 0 0" size="0.001" type="sphere" group="3"/>
+            <body name="link2" quat="0.135866 0.135867 -0.69393 0.693932">
+              <inertial pos="0.15 0 0" mass="0.8" diaginertia="0.001 0.008 0.008"/>
+              <joint name="joint2" class="joint2"/>
+              <geom name="link2_collision1" type="box" pos="0.08 0.015 0" euler="0 0 0.15" size="0.11 0.03 0.04" class="obj_collision"/>
+              <geom name="link2_collision2" type="box" pos="0.235 0.015 0" euler="0 0 -0.3" size="0.065 0.025 0.045" class="obj_collision"/>
+              <site name="touch_site_link2" pos="0.15 0 0" size="0.001" type="sphere" group="3"/>
+              <body name="link3" pos="0.27009 0 0" quat="0.192144 0 0 -0.981367">
+                <inertial pos="0.13 0 0" mass="0.6" diaginertia="5e-4 0.005 0.005"/>
+                <joint name="joint3" class="joint3"/>
+                <geom name="link3_collision" type="box" pos="0.13 0 0" size="0.13 0.025 0.025" class="obj_collision"/>
+                <site name="touch_site_link3" pos="0.13 0 0" size="0.001" type="sphere" group="3"/>
+                <body name="link4" pos="0.29015 0 0" quat="-2.59734e-06 0.707105 2.59735e-06 0.707108">
+                  <inertial pos="0 0 0" mass="0.3" diaginertia="2e-4 2e-4 1e-4"/>
+                  <joint name="joint4" class="joint4"/>
+                  <geom name="link4_collision" type="cylinder" pos="0 0 0" euler="1.5708 0 0" size="0.03 0.03" class="obj_collision"/>
+                  <site name="touch_site_link4" pos="0 0 0" size="0.001" type="sphere" group="3"/>
+                  <body name="link5" quat="0.707105 0.707108 0 0">
+                    <inertial pos="0 0.06 0" mass="0.25" diaginertia="1.5e-4 1.5e-4 8e-5"/>
+                    <joint name="joint5" class="joint5"/>
+                    <geom name="link5_collision" type="cylinder" pos="0 0.06 0" euler="1.5708 0 0" size="0.03 0.03" class="obj_collision"/>
+                    <site name="touch_site_link5" pos="0 0.06 0" size="0.001" type="sphere" group="3"/>
+                    <body name="link6" pos="0 0.23645 0" quat="0.499998 -0.5 0.5 0.500002">
+                      <inertial pos="-0.0047053 7.3857e-05 -0.12293" mass="0.53855" diaginertia="5e-05 5e-05 3.85e-05"/>
+                      <joint name="joint6" class="joint6"/>
+                      <geom name="link6_collision" type="box" pos="0 0 -0.07" size="0.025 0.08 0.015" class="obj_collision"/>
+                      <site name="endpoint" pos="0 0 0.015" euler="0 -1.5708 0" size="0.01" type="sphere" rgba="0 1 0 1"/>
+                      <site name="touch_site_link6" pos="0 0 -0.07" size="0.001" type="sphere" group="3"/>
+                      <body name="eef_connect_base_link">
+                        <geom name="eef_collision" type="sphere" size=".012" pos="0 0 0.015" class="obj_collision"/>
+                        <site name="touch_site_eef" pos="0 0 0.015" size="0.001" type="sphere" group="3"/>
+                      </body>
+                    </body>
+                  </body>
+                </body>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+
+    </body>
+  </worldbody>
+
+  <contact>
+    <exclude body1="arm_base" body2="link1"/>
+    <exclude body1="arm_base" body2="link2"/>
+    <exclude body1="link1" body2="link2"/>
+    <exclude body1="link2" body2="link3"/>
+    <exclude body1="link3" body2="link4"/>
+    <exclude body1="link4" body2="link5"/>
+    <exclude body1="link5" body2="link6"/>
+    <exclude body1="link6" body2="eef_connect_base_link"/>
+  </contact>
+
+  <actuator>
+    <!-- Actuator order matches qpos order (Isaac Lab D1 convention):
+         per-leg [hip_pos, thigh_pos, calf_pos, wheel_vel] x 4, then arm x 6.
+         Wheel velocity control: force = Kv*(ctrl - vel), via gainprm[0]=Kv, biasprm[2]=-Kv.
+         Leg/wheel gains are baked in XML; arm gains are set at runtime.
+         Wheel actuators do NOT use biastype="affine" to prevent the backend's
+         position-actuator gain override from corrupting their velocity-control formula. -->
+
+    <!-- FL leg -->
+    <general name="FL_hip" joint="FL_hip_joint" biastype="affine" gainprm="60 0 0" biasprm="0 -60 -1.5" forcerange="-80 80" ctrlrange="-0.785 0.785"/>
+    <general name="FL_thigh" joint="FL_thigh_joint" biastype="affine" gainprm="60 0 0" biasprm="0 -60 -1.5" forcerange="-80 80" ctrlrange="-1.83 3.4"/>
+    <general name="FL_calf" joint="FL_calf_joint" biastype="affine" gainprm="60 0 0" biasprm="0 -60 -1.5" forcerange="-80 80" ctrlrange="-2.775 -0.855"/>
+    <velocity name="FL_wheel" joint="FL_foot_joint" kv="0.5" forcerange="-12 12" ctrlrange="-30 30"/>
+    <!-- FR leg -->
+    <general name="FR_hip" joint="FR_hip_joint" biastype="affine" gainprm="60 0 0" biasprm="0 -60 -1.5" forcerange="-80 80" ctrlrange="-0.785 0.785"/>
+    <general name="FR_thigh" joint="FR_thigh_joint" biastype="affine" gainprm="60 0 0" biasprm="0 -60 -1.5" forcerange="-80 80" ctrlrange="-1.83 3.4"/>
+    <general name="FR_calf" joint="FR_calf_joint" biastype="affine" gainprm="60 0 0" biasprm="0 -60 -1.5" forcerange="-80 80" ctrlrange="-2.775 -0.855"/>
+    <velocity name="FR_wheel" joint="FR_foot_joint" kv="0.5" forcerange="-12 12" ctrlrange="-30 30"/>
+    <!-- RL leg -->
+    <general name="RL_hip" joint="RL_hip_joint" biastype="affine" gainprm="60 0 0" biasprm="0 -60 -1.5" forcerange="-80 80" ctrlrange="-0.785 0.785"/>
+    <general name="RL_thigh" joint="RL_thigh_joint" biastype="affine" gainprm="60 0 0" biasprm="0 -60 -1.5" forcerange="-80 80" ctrlrange="-1.83 3.4"/>
+    <general name="RL_calf" joint="RL_calf_joint" biastype="affine" gainprm="60 0 0" biasprm="0 -60 -1.5" forcerange="-80 80" ctrlrange="-2.775 -0.855"/>
+    <velocity name="RL_wheel" joint="RL_foot_joint" kv="0.5" forcerange="-12 12" ctrlrange="-30 30"/>
+    <!-- RR leg -->
+    <general name="RR_hip" joint="RR_hip_joint" biastype="affine" gainprm="60 0 0" biasprm="0 -60 -1.5" forcerange="-80 80" ctrlrange="-0.785 0.785"/>
+    <general name="RR_thigh" joint="RR_thigh_joint" biastype="affine" gainprm="60 0 0" biasprm="0 -60 -1.5" forcerange="-80 80" ctrlrange="-1.83 3.4"/>
+    <general name="RR_calf" joint="RR_calf_joint" biastype="affine" gainprm="60 0 0" biasprm="0 -60 -1.5" forcerange="-80 80" ctrlrange="-2.775 -0.855"/>
+    <velocity name="RR_wheel" joint="RR_foot_joint" kv="0.5" forcerange="-12 12" ctrlrange="-30 30"/>
+
+    <!-- Arm position actuators: 6 total (Kp/Kd set at runtime) -->
+    <position joint="joint1" class="joint1" forcerange="-24 24" forcelimited="true" ctrllimited="true"/>
+    <position joint="joint2" class="joint2" forcerange="-24 24" forcelimited="true" ctrllimited="true"/>
+    <position joint="joint3" class="joint3" forcerange="-24 24" forcelimited="true" ctrllimited="true"/>
+    <position joint="joint4" class="joint4" forcerange="-8 8" forcelimited="true" ctrllimited="true"/>
+    <position joint="joint5" class="joint5" forcerange="-8 8" forcelimited="true" ctrllimited="true"/>
+    <position joint="joint6" class="joint6" forcerange="-8 8" forcelimited="true" ctrllimited="true"/>
+  </actuator>
+
+  <sensor>
+    <!-- D1 leg joint position sensors: 16 total (hip, thigh, calf, foot per leg) -->
+    <jointpos joint="FL_hip_joint" name="FL_hip_pos"/>
+    <jointpos joint="FL_thigh_joint" name="FL_thigh_pos"/>
+    <jointpos joint="FL_calf_joint" name="FL_calf_pos"/>
+    <jointpos joint="FL_foot_joint" name="FL_foot_pos"/>
+    <jointpos joint="FR_hip_joint" name="FR_hip_pos"/>
+    <jointpos joint="FR_thigh_joint" name="FR_thigh_pos"/>
+    <jointpos joint="FR_calf_joint" name="FR_calf_pos"/>
+    <jointpos joint="FR_foot_joint" name="FR_foot_pos"/>
+    <jointpos joint="RL_hip_joint" name="RL_hip_pos"/>
+    <jointpos joint="RL_thigh_joint" name="RL_thigh_pos"/>
+    <jointpos joint="RL_calf_joint" name="RL_calf_pos"/>
+    <jointpos joint="RL_foot_joint" name="RL_foot_pos"/>
+    <jointpos joint="RR_hip_joint" name="RR_hip_pos"/>
+    <jointpos joint="RR_thigh_joint" name="RR_thigh_pos"/>
+    <jointpos joint="RR_calf_joint" name="RR_calf_pos"/>
+    <jointpos joint="RR_foot_joint" name="RR_foot_pos"/>
+
+    <!-- D1 leg joint velocity sensors: 16 total -->
+    <jointvel joint="FL_hip_joint" name="FL_hip_vel"/>
+    <jointvel joint="FL_thigh_joint" name="FL_thigh_vel"/>
+    <jointvel joint="FL_calf_joint" name="FL_calf_vel"/>
+    <jointvel joint="FL_foot_joint" name="FL_foot_vel"/>
+    <jointvel joint="FR_hip_joint" name="FR_hip_vel"/>
+    <jointvel joint="FR_thigh_joint" name="FR_thigh_vel"/>
+    <jointvel joint="FR_calf_joint" name="FR_calf_vel"/>
+    <jointvel joint="FR_foot_joint" name="FR_foot_vel"/>
+    <jointvel joint="RL_hip_joint" name="RL_hip_vel"/>
+    <jointvel joint="RL_thigh_joint" name="RL_thigh_vel"/>
+    <jointvel joint="RL_calf_joint" name="RL_calf_vel"/>
+    <jointvel joint="RL_foot_joint" name="RL_foot_vel"/>
+    <jointvel joint="RR_hip_joint" name="RR_hip_vel"/>
+    <jointvel joint="RR_thigh_joint" name="RR_thigh_vel"/>
+    <jointvel joint="RR_calf_joint" name="RR_calf_vel"/>
+    <jointvel joint="RR_foot_joint" name="RR_foot_vel"/>
+
+    <!-- IMU sensors -->
+    <gyro site="imu" name="gyro"/>
+    <accelerometer site="imu" name="accelerometer"/>
+    <velocimeter site="imu" name="local_linvel"/>
+    <framezaxis objtype="site" objname="imu" name="upvector"/>
+    <framequat objtype="site" objname="imu" name="orientation"/>
+    <framepos objtype="site" objname="imu" name="global_position"/>
+    <framelinvel objtype="site" objname="imu" name="global_linvel"/>
+    <frameangvel objtype="site" objname="imu" name="global_angvel"/>
+
+    <!-- Foot world-frame linear velocities -->
+    <framelinvel objtype="site" objname="FL" name="FL_global_linvel"/>
+    <framelinvel objtype="site" objname="FR" name="FR_global_linvel"/>
+    <framelinvel objtype="site" objname="RL" name="RL_global_linvel"/>
+    <framelinvel objtype="site" objname="RR" name="RR_global_linvel"/>
+
+    <!-- Foot world-frame positions -->
+    <framepos objtype="site" objname="FL" name="FL_pos"/>
+    <framepos objtype="site" objname="FR" name="FR_pos"/>
+    <framepos objtype="site" objname="RL" name="RL_pos"/>
+    <framepos objtype="site" objname="RR" name="RR_pos"/>
+
+    <!-- Arm joint position sensors -->
+    <jointpos name="joint1_pos" joint="joint1"/>
+    <jointpos name="joint2_pos" joint="joint2"/>
+    <jointpos name="joint3_pos" joint="joint3"/>
+    <jointpos name="joint4_pos" joint="joint4"/>
+    <jointpos name="joint5_pos" joint="joint5"/>
+    <jointpos name="joint6_pos" joint="joint6"/>
+
+    <!-- Arm joint velocity sensors -->
+    <jointvel name="joint1_vel" joint="joint1"/>
+    <jointvel name="joint2_vel" joint="joint2"/>
+    <jointvel name="joint3_vel" joint="joint3"/>
+    <jointvel name="joint4_vel" joint="joint4"/>
+    <jointvel name="joint5_vel" joint="joint5"/>
+    <jointvel name="joint6_vel" joint="joint6"/>
+
+    <!-- Arm joint torque sensors -->
+    <jointactuatorfrc name="joint1_torque" joint="joint1"/>
+    <jointactuatorfrc name="joint2_torque" joint="joint2"/>
+    <jointactuatorfrc name="joint3_torque" joint="joint3"/>
+    <jointactuatorfrc name="joint4_torque" joint="joint4"/>
+    <jointactuatorfrc name="joint5_torque" joint="joint5"/>
+    <jointactuatorfrc name="joint6_torque" joint="joint6"/>
+
+    <!-- End-effector sensors relative to armbasepoint -->
+    <framepos name="endpoint_pos" objtype="site" objname="endpoint" reftype="site" refname="armbasepoint"/>
+    <framequat name="endpoint_quat" objtype="site" objname="endpoint" reftype="site" refname="armbasepoint"/>
+    <framelinvel name="endpoint_vel" objtype="site" objname="endpoint" reftype="site" refname="armbasepoint"/>
+
+    <!-- End-effector sensors relative to arm_base_on_d1 -->
+    <framepos name="endpoint_relative_pos" objtype="site" objname="endpoint" reftype="body" refname="arm_base_on_d1"/>
+    <framequat name="endpoint_relative_quat" objtype="site" objname="endpoint" reftype="body" refname="arm_base_on_d1"/>
+
+    <!-- Arm base world pose -->
+    <framepos name="armbasepoint_world_pos" objtype="site" objname="armbasepoint"/>
+    <framequat name="armbasepoint_world_quat" objtype="site" objname="armbasepoint"/>
+
+    <!-- Arm link touch sensors -->
+    <touch name="arm_touch_base" site="touch_site_base"/>
+    <touch name="arm_touch_link1" site="touch_site_link1"/>
+    <touch name="arm_touch_link2" site="touch_site_link2"/>
+    <touch name="arm_touch_link3" site="touch_site_link3"/>
+    <touch name="arm_touch_link4" site="touch_site_link4"/>
+    <touch name="arm_touch_link5" site="touch_site_link5"/>
+    <touch name="arm_touch_link6" site="touch_site_link6"/>
+    <touch name="arm_touch_eef" site="touch_site_eef"/>
+  </sensor>
+</mujoco>
