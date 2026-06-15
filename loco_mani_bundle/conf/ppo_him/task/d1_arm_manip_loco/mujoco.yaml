@@ -19,15 +19,15 @@ algo:
     target_obs_start: 3       # 88-dim obs without linvel starts at critic_obs[3]
 reward:
   scales:
-    # locomotion: tracking
+    # locomotion: tracking (upright-gated)
     tracking_lin_vel: 1.0
     tracking_ang_vel: 0.2
     # locomotion: velocity / orientation penalties
-    lin_vel_z: -5.0
-    ang_vel_xy: -0.1
-    roll: -2.0
+    lin_vel_z: -2.0
+    ang_vel_xy: -0.05
+    roll: -1.0
     # locomotion: height / pose
-    base_height: -100.0
+    base_height: -1.0
     leg_pose: -0.1
     dof_pos_limits: -10.0
     # locomotion: effort penalties
@@ -36,19 +36,24 @@ reward:
     energy: -0.0002
     dof_vel: -0.0001
     dof_acc: -2.5e-7
-    # locomotion: gait
+    # standing penalty
     stand_still: -0.1
-    contact: 0.24
-    swing_feet_z: 4.0
-    # manipulation rewards
+    # gait rewards: DISABLED for wheeled robot
+    contact: 0.0
+    swing_feet_z: 0.0
+    # manipulation rewards (upright-gated)
     object_distance: 2.0
     object_distance_l2: -0.5
     # arm collision penalty
     arm_collision: -1.0
+    # D1-specific
+    undesired_contacts: -1.0
   tracking_sigma: 0.25
   base_height_target: 0.45
   object_sigma: 0.1
 env:
+  noise_config:
+    level: 1.0
   goal_ee:
     sphere_l_range:     [0.3, 0.6]
     sphere_phi_range:   [-1.2566, 1.0472]
@@ -63,6 +68,7 @@ env:
     init_ee_cart: [0.30, 0.0, 0.25]
   control_config:
     wheel_action_scale: 5.0
+    leg_action_scales: [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.125, 0.25, 0.25]
   ik:
     damping: 0.05
     gain: 1.0
@@ -83,18 +89,18 @@ env:
     num_critic_history: 1
   domain_rand:
     randomize_base_mass: true
-    added_mass_range: [-1.0, 1.0]
+    added_mass_range: [-1.0, 3.0]
     random_com: true
-    com_offset_x: [-0.03, 0.03]
+    com_offset_x: [-0.1, 0.1]
     randomize_gravity: false
     push_robots: true
     push_interval: 500
     max_force: [1.5, 1.5, 0.8]
     push_body_name: base
     randomize_kp: true
-    kp_multiplier_range: [0.9, 1.1]
+    kp_multiplier_range: [0.8, 1.2]
     randomize_kd: true
-    kd_multiplier_range: [0.9, 1.1]
+    kd_multiplier_range: [0.8, 1.2]
   arm_stage:
     freeze_arm_joints: true
     disable_ee_goal_trajectory: true

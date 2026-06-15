@@ -4,7 +4,7 @@ training:
   sim_backend: mujoco
 algo:
   num_envs: 4096
-  max_iterations: 151
+  max_iterations: 5000
   empirical_normalization: true
   obs_groups:
     actor:
@@ -17,38 +17,43 @@ algo:
     num_mini_batches: 4
 reward:
   scales:
-    # locomotion: tracking
+    # locomotion: tracking (upright-gated)
     tracking_lin_vel: 2.0
-    tracking_ang_vel: 0.5
+    tracking_ang_vel: 1.0
     # locomotion: velocity / orientation penalties
-    lin_vel_z: -5.0
-    ang_vel_xy: -0.1
-    roll: -5.0
+    lin_vel_z: -2.0
+    ang_vel_xy: -0.05
+    roll: -1.0
     # locomotion: height / pose
-    base_height: -100
+    base_height: -1.0
     similar_to_default: -0.0
     leg_pose: -0.1
     dof_pos_limits: 0.0
     # locomotion: effort penalties
-    action_rate: -0.005
+    action_rate: -0.01
     torques: 0.0
     energy: 0.0
     dof_vel: 0.0
-    dof_acc: 0.0
-    # locomotion: gait
+    dof_acc: -2.5e-7
+    # standing penalty (upright-gated)
     stand_still: -0.5
-    contact: 0.24
-    swing_feet_z: 4.0
-    foot_drag: -0.1
-    # manipulation rewards
+    # gait rewards: DISABLED for wheeled robot
+    contact: 0.0
+    swing_feet_z: 0.0
+    foot_drag: 0.0
+    # manipulation rewards (upright-gated)
     object_distance: 2.0
     object_distance_l2: -0.5
     # arm collision penalty
     arm_collision: -1.0
+    # D1-specific: penalize non-wheel contacts with ground
+    undesired_contacts: -1.0
   tracking_sigma: 0.25
   base_height_target: 0.45
   object_sigma: 0.1
 env:
+  noise_config:
+    level: 1.0
   goal_ee:
     sphere_l_range:     [0.3, 0.6]
     sphere_phi_range:   [-1.2566, 1.0472]
@@ -69,6 +74,8 @@ env:
   control_config:
     arm_action_scale: 0.0
     wheel_action_scale: 5.0
+    # Per-joint scales: FL(hip,thigh,calf), FR(...), RL(...), RR(hip=0.125,thigh,calf)
+    leg_action_scales: [0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.125, 0.25, 0.25]
   ik:
     damping: 0.05
     gain: 1.0
@@ -77,22 +84,22 @@ env:
     orientation_mode: target
   commands:
     vel_limit:
-      - [-0.6, -0.4, -0.8]
-      - [1.0, 0.4, 0.8]
-    zero_command_prob: 0.15
-    resample_time_s: 4.0
+      - [-1.0, -1.0, -1.0]
+      - [1.0, 1.0, 1.0]
+    zero_command_prob: 0.02
+    resample_time_s: 10.0
   curriculum:
     enable: false
   domain_rand:
     randomize_base_mass: false
-    added_mass_range: [-1.0, 1.0]
+    added_mass_range: [-1.0, 3.0]
     randomize_body_mass: true
     body_mass_multiplier_range: [0.9, 1.1]
     random_com: true
-    com_offset_x: [-0.03, 0.03]
+    com_offset_x: [-0.1, 0.1]
     randomize_gravity: false
     randomize_ground_friction: true
-    ground_friction_multiplier_range: [0.8, 1.2]
+    ground_friction_multiplier_range: [0.2, 2.75]
     randomize_dof_armature: true
     dof_armature_multiplier_range: [0.8, 1.2]
     push_robots: true
@@ -100,9 +107,9 @@ env:
     max_force: [1.5, 1.5, 0.8]
     push_body_name: base
     randomize_kp: true
-    kp_multiplier_range: [0.9, 1.1]
+    kp_multiplier_range: [0.8, 1.2]
     randomize_kd: true
-    kd_multiplier_range: [0.9, 1.1]
+    kd_multiplier_range: [0.8, 1.2]
   arm_stage:
     freeze_arm_joints: false
     disable_ee_goal_trajectory: false

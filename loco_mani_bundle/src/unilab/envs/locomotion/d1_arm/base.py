@@ -50,14 +50,16 @@ class ControlConfig(ControlConfigBase):
     leg_kd: float | list[float] | None = 1.5
     wheel_kv: float = 0.5
     wheel_action_scale: float = 5.0
+    # Per-joint leg action scales (12 values matching LEG_POS_IDX order:
+    # FL_hip, FL_thigh, FL_calf, FR_hip, ..., RR_hip, RR_thigh, RR_calf).
+    # Isaac Lab D1 uses 0.125 for RR_hip and 0.25 for the rest.
+    leg_action_scales: list[float] | None = None
     arm_kp: float | list[float] | None = field(
         default_factory=lambda: [95.0, 115.0, 100.0, 52.0, 54.0, 55.0]
     )
     arm_kd: float | list[float] | None = field(
         default_factory=lambda: [3.5, 3.8, 2.5, 1.5, 1.5, 1.5]
     )
-    # Arm residual action scale, independent from leg action_scale. IK provides
-    # the primary control, so policy output stays small early in training.
     arm_action_scale: float = 0.0
 
 

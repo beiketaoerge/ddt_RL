@@ -326,10 +326,22 @@ class D1ArmManipLocoEnv(D1ArmBaseEnv):
 
         self._enable_reward_log = True
         self._reward_cfg = cfg.reward_config
-        # Leg pose weights: 12 leg joints (hip=1, thigh=1, calf=0.1, wheel=0) x4 + 6 arm zeros.
         self._leg_pose_weights = np.array(
             [1.0, 1.0, 0.1, 0.0] * 4 + [0.0] * 6, dtype=get_global_dtype()
         )
+        # Per-joint leg position action scales (12 values for LEG_POS_IDX).
+        if cfg.control_config.leg_action_scales is not None:
+            self._leg_action_scales = np.asarray(
+                cfg.control_config.leg_action_scales, dtype=get_global_dtype()
+            )
+            if self._leg_action_scales.shape != (12,):
+                raise ValueError(
+                    f"leg_action_scales must have 12 elements, got {self._leg_action_scales.shape}"
+                )
+        else:
+            self._leg_action_scales = np.full(
+                12, cfg.control_config.action_scale, dtype=get_global_dtype()
+            )
         self._init_reward_functions()
         self._init_ee_goal_buffers(num_envs)
         self._current_ee_local_pos = np.zeros((num_envs, 3), dtype=get_global_dtype())
@@ -577,6 +589,14 @@ class D1ArmManipLocoEnv(D1ArmBaseEnv):
         self._episode_sum_tracking_vel[env_ids] = 0.0
         self._episode_steps[env_ids] = 0
 
+    # Rewards gated by the upright filter (suppressed when robot tips over).
+    _UPRIGHT_GATED_REWARDS: frozenset = frozenset({
+        "tracking_lin_vel", "tracking_ang_vel",
+        "object_distance", "object_distance_l2",
+        "contact", "swing_feet_z", "foot_drag",
+        "stand_still", "action_rate",
+    })
+
     # Command clipping threshold: small vx/vy/vyaw commands are zeroed out.
     _CMD_CLIP: float = 0.1
 
@@ -649,7 +669,7 @@ class D1ArmManipLocoEnv(D1ArmBaseEnv):
         ctrl = np.zeros_like(actions, dtype=get_global_dtype())
         # Leg position control: 12 joints at interleaved indices [0,1,2, 4,5,6, ...]
         ctrl[:, LEG_POS_IDX] = (
-            exec_actions[:, LEG_POS_IDX] * self._cfg.control_config.action_scale
+            exec_actions[:, LEG_POS_IDX] * self._leg_action_scales
             + self.default_angles[LEG_POS_IDX]
         )
         # Wheel velocity control: 4 joints at interleaved indices [3,7,11,15]
@@ -702,6 +722,8 @@ class D1ArmManipLocoEnv(D1ArmBaseEnv):
             "object_distance_l2": self._reward_object_distance_l2,
             # Arm collision penalty.
             "arm_collision": self._reward_arm_collision,
+            # D1-specific: penalize non-wheel contacts (base, hip, thigh, calf).
+            "undesired_contacts": self._reward_undesired_contacts,
         }
 
     def update_state(self, state: NpEnvState) -> NpEnvState:
@@ -951,6 +973,10 @@ class D1ArmManipLocoEnv(D1ArmBaseEnv):
             pose_weights=self._leg_pose_weights,
         )
 
+        # Upright filter: suppress positive rewards when the robot is tipping.
+        # Matches Isaac Lab D1's clamp(-gravity_z, 0, 0.7)/0.7 convention.
+        upright = rewards.upright_scale(gravity, self._num_envs)
+
         step_count = info.get("steps", np.zeros((self._num_envs,), dtype=np.uint32))
         should_log = self._enable_reward_log and (int(step_count[0]) % 4 == 0)
         log = {} if should_log else info.get("log", {})
@@ -959,6 +985,8 @@ class D1ArmManipLocoEnv(D1ArmBaseEnv):
             if scale == 0 or name not in self._reward_fns:
                 continue
             rew = self._reward_fns[name](ctx)
+            if name in self._UPRIGHT_GATED_REWARDS:
+                rew = rew * upright
             weighted_rew = rew * scale
             reward += weighted_rew
             if name == "tracking_lin_vel":
@@ -1057,4 +1085,23 @@ class D1ArmManipLocoEnv(D1ArmBaseEnv):
         total = np.zeros(self._num_envs, dtype=get_global_dtype())
         for name in self._ARM_TOUCH_SENSORS:
             total += self._backend.get_sensor_data(name)[:, 0]
+        return total
+
+    _BODY_CONTACT_SENSORS = (
+        "base_front_contact", "base_front_lower_contact",
+        "base_rear_contact", "base_rear_lower_contact",
+        "fl_hip_contact", "fr_hip_contact", "rl_hip_contact", "rr_hip_contact",
+        "fl_thigh_contact", "fr_thigh_contact", "rl_thigh_contact", "rr_thigh_contact",
+        "fl_calf_contact", "fr_calf_contact", "rl_calf_contact", "rr_calf_contact",
+    )
+
+    def _reward_undesired_contacts(self, _ctx: RewardContext) -> np.ndarray:
+        """Penalize non-wheel body parts touching the ground (base, hip, thigh, calf)."""
+        total = np.zeros(self._num_envs, dtype=get_global_dtype())
+        for name in self._BODY_CONTACT_SENSORS:
+            try:
+                data = self._backend.get_sensor_data(name)[:, 0]
+                total += np.clip(data, 0.0, 1.0)
+            except KeyError:
+                pass
         return total
